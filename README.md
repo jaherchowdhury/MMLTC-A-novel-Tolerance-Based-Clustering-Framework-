@@ -28,40 +28,87 @@ cd MMLTC-A-novel-Tolerance-Based-Clustering-Framework
 pip install -r requirements.txt
 ```
 
-**Dependencies:** `torch`, `numpy`, `scikit-learn`, `pandas`
+---
+
+## Requirements
+
+```
+torch>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+pandas>=2.0.0
+```
+
+---
+
+## Feature File Format
+
+MMLTC expects pre-extracted multimodal features stored as JSON files. Each file should follow this structure:
+
+```json
+{
+  "multimodal_features": [[...], [...], ...],
+  "labels": ["offensive", "non-offensive", ...]
+}
+```
+
+Features are obtained by concatenating image and text embeddings from **AltCLIP** (or any multimodal encoder). Organize your feature files like this:
+
+```
+Features/
+├── train_<DATASET>_features_alt.json
+├── dev_<DATASET>_features_alt.json
+└── test_<DATASET>_features_alt.json
+```
+
+A sample feature file for the **MultiOFF** dataset is included in the `Features/` directory to help you get started.
 
 ---
 
 ## Quick Start
 
 ```python
-import torch
+import json
+import random
 import numpy as np
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+import torch
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 
 from MMLTC import MMLTC
 
-# Device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# ── Reproducibility ───────────────────────────────────────────────────────────
+torch.manual_seed(42)
+np.random.seed(42)
+random.seed(42)
 
-# Data (replace with your own X_train / X_test / y_train / y_test)
-data = load_iris()
-X, y = data.data.astype(np.float32), data.target
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
+# ── Device ────────────────────────────────────────────────────────────────────
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
-# 1. Set your best hyper-parameters
-best_distance      = 'ts_ss'            # 'ts_ss' | 'euclidean' | 'cosine'
+# ── Data loading & preprocessing ──────────────────────────────────────────────
+train_file = 'Features/train_MultiOFF_features_alt.json'
+val_file   = 'Features/dev_MultiOFF_features_alt.json'
+test_file  = 'Features/test_MultiOFF_features_alt.json'
+
+with open(train_file) as f: train_dict = json.load(f)
+with open(val_file)   as f: val_dict   = json.load(f)
+with open(test_file)  as f: test_dict  = json.load(f)
+
+X_train = np.array(train_dict['multimodal_features'])
+y_train = np.array(train_dict['labels'])
+X_val   = np.array(val_dict['multimodal_features'])
+y_val   = np.array(val_dict['labels'])
+X_test  = np.array(test_dict['multimodal_features'])
+y_test  = np.array(test_dict['labels'])
+
+# ── 1. Manually set your best hyper-parameters here ───────────────────────────
+best_distance      = 'cosine'            # 'ts_ss' | 'euclidean' | 'cosine'
 best_prototype     = 'geometric_median' # 'mean'  | 'median'    | 'geometric_median'
 best_normalization = 'l2'              # None    | 'l2'        | 'minmax'
-best_min_samples   = 5
-best_k             = 6
-best_tol           = 0.00005
+best_min_samples   = 1                 # integer ≥ 1
+best_k             = 5                 # integer ≥ 1
+best_tol           = 0.2              # float, e.g. 0.1 – 0.9
 
-# 2. Instantiate
+# ── 2. Instantiate the final model ────────────────────────────────────────────
 final_model = MMLTC(
     distance      = best_distance,
     prototype     = best_prototype,
@@ -72,17 +119,23 @@ final_model = MMLTC(
     device        = device,
 )
 
-# 3. Train
+# ── 3. Train on the entire training set ───────────────────────────────────────
 final_model.fit(X_train, y_train)
 
-# 4. Predict
+# ── 4. Predict on the test set ────────────────────────────────────────────────
 with torch.no_grad():
     preds_test = final_model.predict(X_test)
 
-# 5. Evaluate
-print(f"Accuracy:    {accuracy_score(y_test, preds_test):.4f}")
-print(f"Weighted F1: {f1_score(y_test, preds_test, average='weighted'):.4f}")
-print(confusion_matrix(y_test, preds_test))
+# ── 5. Compute metrics ────────────────────────────────────────────────────────
+acc_test = accuracy_score(y_test, preds_test)
+f1_test  = f1_score(y_test, preds_test, average='weighted')
+cm       = confusion_matrix(y_test, preds_test)
+
+print(f"Test Accuracy:    {acc_test:.4f}")
+print(f"Test Weighted-F1: {f1_test:.4f}\n")
+print("Confusion Matrix:")
+print(cm)
+print("\nClassification Report:")
 print(classification_report(y_test, preds_test))
 ```
 
@@ -118,7 +171,7 @@ print(classification_report(y_test, preds_test))
 - `'minmax'`: scales each feature to [0, 1]; produces larger distances (e.g., 0.2–2.2 range for TS-SS); use larger tolerances
 - `None`: no normalization; use when embeddings are already appropriately scaled
 
-> **Tip:** A practical starting point for tolerance search is the **5th–95th percentile range** of the pairwise distance distribution on your training set.
+> **Tip:** A practical starting point for the tolerance search is the **5th–95th percentile range** of the pairwise distance distribution on your training set.
 
 ---
 
@@ -164,7 +217,7 @@ Each feature dimension is scaled to [0, 1] using training-set statistics. Min/ma
 For a test vector **Z_test**, find the k nearest prototypes and predict via inverse-distance weighted voting:
 
 ```
-ŷ = argmax_c Σ_{i: y_i=c}  1 / (d(Z_test, P_i) + δ)
+ŷ = argmax_c  Σ_{i: y_i=c}  1 / (d(Z_test, P_i) + δ)
 ```
 
 ---
@@ -200,7 +253,7 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 |---|---|---|---|
 | MVSA-Single | English | Sentiment | Pos / Neg / Neu |
 | MVSA-Multiple | English | Sentiment | Pos / Neg / Neu |
-| MultiOFF | English | Offensive content | Off / Non-Off |
+| MultiOFF | English | Offensive content | Offensive / Non-Offensive |
 | FHM | English | Hate speech | Hate / Non-Hate |
 | MemoSen | Bengali | Sentiment | Pos / Neg / Neu |
 | BHM | Bengali | Hate speech | Hate / Non-Hate |
@@ -229,6 +282,22 @@ Representative best configurations from the paper:
 | MemoSen | L2 | Euclidean | Geometric-Median | 12 | 0.2 |
 | BHM | Min-Max | TS-SS | Mean | 4 | 0.6 |
 | MUTE | L2 | Euclidean | Mean | 4 | 0.8 |
+
+---
+
+## Repository Structure
+
+```
+MMLTC/
+├── MMLTC.py              # Core classifier implementation
+├── mmltc_demo.py         # Demo script using MultiOFF features
+├── requirements.txt      # Python dependencies
+├── Features/
+│   ├── train_MultiOFF_features_alt.json
+│   ├── dev_MultiOFF_features_alt.json
+│   └── test_MultiOFF_features_alt.json
+└── README.md
+```
 
 ---
 
