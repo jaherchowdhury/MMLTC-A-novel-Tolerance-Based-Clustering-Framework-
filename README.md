@@ -11,7 +11,7 @@
 
 MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — ensuring that each cluster contains only intra-class samples — and reduces each class to a single representative prototype for inference.
 
-![MMLTC Framework Overview](images/NNLTC_Overview.jpg)
+![MMLTC Framework Overview](images/MMLTC_Overview.jpg)
 
 Key highlights:
 - Outperforms state-of-the-art deep neural classifiers on **5 out of 7** benchmark datasets (weighted F1)
@@ -268,7 +268,7 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 
 ### Statistical Analysis vs. Baseline Classifiers
 
-![t-SNE Visualization](images/tsne.png)
+![t-SNE Visualization](images/tsne.jpeg)
 
 | Comparator | p-value | Significant? | Cohen's d | Effect Size |
 |---|---|---|---|---|
