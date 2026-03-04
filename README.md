@@ -9,14 +9,13 @@
 
 ## Overview
 
-MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — ensuring that each cluster contains only intra-class samples — and reduces each class to a single representative prototype for inference.
+MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** —the ensures each cluster contains only intra-class samples and reduces each class to a single representative prototype for inference.
 
 ![MMLTC Framework Overview](images/MMLTC_Overview.jpg)
 
 Key highlights:
 - Outperforms state-of-the-art deep neural classifiers on **5 out of 7** benchmark datasets (weighted F1)
 - Consistently matches or surpasses Random Forest, SVM, Logistic Regression, KNN, and XGBoost
-- Works as a **standalone classifier on any modality** — text, image, audio, tabular, or concatenated multimodal embeddings
 - Operates effectively on **low-resource Bengali** datasets without data augmentation or language-specific engineering
 - Statistically significant improvements over KNN and Random Forest (Wilcoxon signed-rank, p = 0.0156)
 
