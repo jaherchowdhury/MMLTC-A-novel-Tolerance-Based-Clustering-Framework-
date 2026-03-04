@@ -352,7 +352,6 @@ If you use this work, please cite both the paper:
 }
 ```
 
-```
 
 ---
 
