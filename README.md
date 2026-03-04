@@ -221,7 +221,6 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 ```
 
 ---
-
 ## Benchmark Results
 
 ### vs. State-of-the-Art Deep Neural Models (Weighted F1)
