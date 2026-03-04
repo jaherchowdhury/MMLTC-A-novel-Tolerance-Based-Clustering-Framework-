@@ -270,6 +270,8 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 
 ![t-SNE Visualization](images/tsne.jpeg)
 
+Left: Full training data — hate and non-hate classes are heavily overlapping. Right: After MMLTC prototype formation, classes form clearly separated clusters, reducing 5,758 samples to 2,416 prototypes while preserving class separability.
+
 | Comparator | p-value | Significant? | Cohen's d | Effect Size |
 |---|---|---|---|---|
 | KNN | 0.0156 | ✅ Yes | 1.54 | Large |
