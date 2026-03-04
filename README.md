@@ -11,7 +11,7 @@
 
 MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — ensuring that each cluster contains only intra-class samples — and reduces each class to a single representative prototype for inference.
 
-![MMLTC Framework Overview](images/framework_overview.png)
+![MMLTC Framework Overview](images/MMLTC_Flow.jpg)
 
 Key highlights:
 - Outperforms state-of-the-art deep neural classifiers on **5 out of 7** benchmark datasets (weighted F1)
