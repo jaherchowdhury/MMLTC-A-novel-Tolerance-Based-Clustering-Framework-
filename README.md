@@ -339,16 +339,19 @@ MMLTC/
 
 ## Citation
 
+If you use this work, please cite both the paper:
 ```bibtex
-@mastersthesis{chowdhury2025mmltc,
-  title     = {MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal
-               Sentiment and Harmful Meme Classification in Multilingual Settings},
-  author    = {Jaher Hassan Chowdhury},
-  school    = {University of Winnipeg},
-  year      = {2025},
-  month     = {December},
-  note      = {Supervisor: Sheela Ramanna}
+@mastersthesis{chowdhury2025mmltc_thesis,
+  title  = {MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal
+            Sentiment and Harmful Meme Classification in Multilingual Settings},
+  author = {Jaher Hassan Chowdhury},
+  school = {University of Winnipeg},
+  year   = {2025},
+  month  = {December},
+  note   = {Supervisor: Sheela Ramanna}
 }
+```
+
 ```
 
 ---
