@@ -1,21 +1,20 @@
 # MMLTC: A Novel Tolerance-Based Clustering Framework
 
-**Multimodal and Multilingual Tolerance Classification** — a prototype-based classifier grounded in Tolerance Near Set theory for multimodal sentiment analysis and harmful meme classification in multilingual settings.
+**Multimodal and Multilingual Tolerance Classification**: a prototype-based classifier grounded in Tolerance Near Set theory for multimodal sentiment analysis and harmful meme classification in multilingual settings.
 
-> **Paper**: *MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings*
+> **Paper**: *MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings*  
 > Jaher Hassan Chowdhury & Sheela Ramanna — University of Winnipeg, Canada
 
 ---
 
 ## Overview
 
-MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — ensuring that each cluster contains only intra-class samples — and reduces each class to a single representative prototype for inference.
+MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — that ensures each cluster contains only intra-class samples and reduces each class to a single representative prototype for inference.
 
 Key highlights:
 - Outperforms state-of-the-art deep neural classifiers on **5 out of 7** benchmark datasets (weighted F1)
 - Consistently matches or surpasses Random Forest, SVM, Logistic Regression, KNN, and XGBoost
 - Operates effectively on **low-resource Bengali** datasets without data augmentation or language-specific engineering
-- Supports **multimodal** (image + text) and **multilingual** inputs via AltCLIP embeddings
 - Statistically significant improvements over KNN and Random Forest (Wilcoxon signed-rank, p = 0.0156)
 
 ---
@@ -41,72 +40,39 @@ pandas>=2.0.0
 
 ---
 
-## Feature File Format
-
-MMLTC expects pre-extracted multimodal features stored as JSON files. Each file should follow this structure:
-
-```json
-{
-  "multimodal_features": [[...], [...], ...],
-  "labels": ["offensive", "non-offensive", ...]
-}
-```
-
-Features are obtained by concatenating image and text embeddings from **AltCLIP** (or any multimodal encoder). Organize your feature files like this:
-
-```
-Features/
-├── train_<DATASET>_features_alt.json
-├── dev_<DATASET>_features_alt.json
-└── test_<DATASET>_features_alt.json
-```
-
-A sample feature file for the **MultiOFF** dataset is included in the `Features/` directory to help you get started.
-
----
-
 ## Quick Start
 
+MMLTC follows the standard scikit-learn `fit` / `predict` interface and works with any numeric feature array. The example below uses the Iris dataset — replace `X_train`, `X_test`, `y_train`, `y_test` with your own data.
+
 ```python
-import json
-import random
-import numpy as np
 import torch
+import numpy as np
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 
 from MMLTC import MMLTC
 
-# ── Reproducibility ───────────────────────────────────────────────────────────
-torch.manual_seed(42)
-np.random.seed(42)
-random.seed(42)
-
 # ── Device ────────────────────────────────────────────────────────────────────
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}\n")
 
-# ── Data loading & preprocessing ──────────────────────────────────────────────
-train_file = 'Features/train_MultiOFF_features_alt.json'
-val_file   = 'Features/dev_MultiOFF_features_alt.json'
-test_file  = 'Features/test_MultiOFF_features_alt.json'
+# ── Data ──────────────────────────────────────────────────────────────────────
+# Replace this block with your own X_train / X_test / y_train / y_test
+data = load_iris()
+X, y = data.data.astype(np.float32), data.target
 
-with open(train_file) as f: train_dict = json.load(f)
-with open(val_file)   as f: val_dict   = json.load(f)
-with open(test_file)  as f: test_dict  = json.load(f)
-
-X_train = np.array(train_dict['multimodal_features'])
-y_train = np.array(train_dict['labels'])
-X_val   = np.array(val_dict['multimodal_features'])
-y_val   = np.array(val_dict['labels'])
-X_test  = np.array(test_dict['multimodal_features'])
-y_test  = np.array(test_dict['labels'])
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
 
 # ── 1. Manually set your best hyper-parameters here ───────────────────────────
-best_distance      = 'cosine'            # 'ts_ss' | 'euclidean' | 'cosine'
+best_distance      = 'ts_ss'            # 'ts_ss' | 'euclidean' | 'cosine'
 best_prototype     = 'geometric_median' # 'mean'  | 'median'    | 'geometric_median'
 best_normalization = 'l2'              # None    | 'l2'        | 'minmax'
-best_min_samples   = 1                 # integer ≥ 1
-best_k             = 5                 # integer ≥ 1
-best_tol           = 0.2              # float, e.g. 0.1 – 0.9
+best_min_samples   = 5                 # integer ≥ 1
+best_k             = 6                 # integer ≥ 1
+best_tol           = 0.00005           # float, e.g. 0.1 – 0.9
 
 # ── 2. Instantiate the final model ────────────────────────────────────────────
 final_model = MMLTC(
@@ -121,12 +87,13 @@ final_model = MMLTC(
 
 # ── 3. Train on the entire training set ───────────────────────────────────────
 final_model.fit(X_train, y_train)
+print(f"Prototypes built: {final_model.prototypes_.shape[0]}\n")
 
 # ── 4. Predict on the test set ────────────────────────────────────────────────
 with torch.no_grad():
     preds_test = final_model.predict(X_test)
 
-# ── 5. Compute metrics ────────────────────────────────────────────────────────
+# ── 5. Compute & display metrics ──────────────────────────────────────────────
 acc_test = accuracy_score(y_test, preds_test)
 f1_test  = f1_score(y_test, preds_test, average='weighted')
 cm       = confusion_matrix(y_test, preds_test)
@@ -138,6 +105,75 @@ print(cm)
 print("\nClassification Report:")
 print(classification_report(y_test, preds_test))
 ```
+
+---
+
+## Input Format
+
+MMLTC accepts any **2D numeric array** as input — it is not limited to multimodal data. You can pass:
+
+- Raw tabular features
+- Text embeddings (e.g. from BERT, SBERT, XLM-R)
+- Image embeddings (e.g. from CLIP, ResNet)
+- Concatenated multimodal embeddings (e.g. image + text from AltCLIP)
+
+```python
+# NumPy array
+X_train = np.array(...)   # shape: (n_samples, n_features)
+y_train = np.array(...)   # shape: (n_samples,)
+
+# Or directly from a PyTorch tensor
+X_train = my_tensor.numpy()
+```
+
+> **Note:** The datasets used in the paper use **AltCLIP** (CLIP with XLM-R text encoder) for feature extraction, which supports 100+ languages including Bengali. Feature files for these datasets are not included in this repository due to size constraints. Please refer to the dataset links below to obtain the raw data and extract features using your preferred encoder.
+
+---
+
+## Using MMLTC for Unimodal Data
+
+MMLTC works out of the box for any single modality. Simply extract your features, convert them to a NumPy array, and pass them directly to `fit()` and `predict()` — no changes to the classifier are needed.
+
+### Text-only example
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
+X_train = model.encode(train_texts)   # shape: (n_samples, embedding_dim)
+X_test  = model.encode(test_texts)
+
+clf = MMLTC(distance='cosine', normalization='l2', prototype='mean', k=5, tolerance=0.3)
+clf.fit(X_train, y_train)
+preds = clf.predict(X_test)
+```
+
+### Image-only example
+```python
+# assuming you have pre-extracted CNN / ViT embeddings
+X_train = np.load('train_image_embeddings.npy')   # shape: (n_samples, embedding_dim)
+X_test  = np.load('test_image_embeddings.npy')
+
+clf = MMLTC(distance='euclidean', normalization='l2', prototype='geometric_median', k=5, tolerance=0.5)
+clf.fit(X_train, y_train)
+preds = clf.predict(X_test)
+```
+
+### Tabular data example
+```python
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+
+data = load_iris()
+X_train, X_test, y_train, y_test = train_test_split(
+    data.data.astype(np.float32), data.target, test_size=0.2, stratify=data.target
+)
+
+clf = MMLTC(distance='euclidean', normalization='minmax', prototype='mean', k=3, tolerance=0.5)
+clf.fit(X_train, y_train)
+preds = clf.predict(X_test)
+```
+
+> **Tip for unimodal use:** Start with `cosine` + `l2` normalization for embeddings, and `euclidean` + `minmax` normalization for raw tabular features. The tolerance value should be tuned based on the 5th–95th percentile of your pairwise distance distribution.
 
 ---
 
@@ -194,20 +230,10 @@ Standard L2 distance, computed efficiently via the squared-norm expansion.
 
 ---
 
-## Normalization Methods
-
-### L2 Normalization
-Each sample vector is scaled to unit L2 norm before distance computation. Suitable when direction matters more than magnitude (pairs well with `cosine` and `ts_ss`).
-
-### Min-Max Normalization
-Each feature dimension is scaled to [0, 1] using training-set statistics. Min/max values are stored at `fit()` time and reused at `predict()` time to prevent data leakage.
-
----
-
 ## How It Works
 
 ### Training Phase
-1. Concatenate multimodal embeddings (image + text) into a unified feature vector **Z**
+1. Accept any numeric feature array `X` and label array `y`
 2. For each class label, compute pairwise distances between all in-class samples
 3. Form **label-exclusive tolerance classes**: `TC_i = { Z_j | d(Z_i, Z_j) ≤ ε and y_j = y_i }`
 4. Compute a **prototype** for each tolerance class using the selected aggregation strategy
@@ -221,6 +247,7 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 ```
 
 ---
+
 ## Benchmark Results
 
 ### vs. State-of-the-Art Deep Neural Models (Weighted F1)
@@ -258,7 +285,13 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 | BHM | Bengali | Hate speech | Hate / Non-Hate |
 | MUTE | Bengali | Hate speech | Hate / Non-Hate |
 
-Feature extraction uses **AltCLIP** (CLIP with XLM-R text encoder), supporting 100+ languages including Bengali.
+Dataset links:
+- [MVSA-Single & Multiple](https://mcrlab.net/research/mvsa-sentiment-analysis-on-multi-view-social-data/)
+- [MultiOFF](https://github.com/bharathichezhiyan/Multimodal-Meme-Classification-Identifying-Offensive-Content-in-Image-and-Text)
+- [Facebook Hateful Meme (FHM)](https://www.kaggle.com/datasets/parthplc/facebook-hateful-meme-dataset)
+- [MemoSen](https://github.com/eftekhar-hossain/MemoSen)
+- [BHM](https://github.com/eftekhar-hossain/Bengali-Hateful-Memes)
+- [MUTE](https://github.com/eftekhar-hossain/MUTE-AACL22)
 
 ---
 
@@ -288,13 +321,9 @@ Representative best configurations from the paper:
 
 ```
 MMLTC/
-├── MMLTC.py              # Core classifier implementation
-├── mmltc_demo.py         # Demo script using MultiOFF features
-├── requirements.txt      # Python dependencies
-├── Features/
-│   ├── train_MultiOFF_features_alt.json
-│   ├── dev_MultiOFF_features_alt.json
-│   └── test_MultiOFF_features_alt.json
+├── MMLTC.py          # Core classifier implementation
+├── MMLTC_demo.py     # Demo script (Iris dataset — replace with your own data)
+├── requirements.txt  # Python dependencies
 └── README.md
 ```
 
