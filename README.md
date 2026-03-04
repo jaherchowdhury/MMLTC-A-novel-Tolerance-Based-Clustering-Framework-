@@ -1,6 +1,6 @@
 # MMLTC: A Novel Tolerance-Based Clustering Framework
 
-**Multimodal and Multilingual Tolerance Classification**: a prototype-based classifier grounded in Tolerance Near Set theory for multimodal sentiment analysis and harmful meme classification in multilingual settings.
+**Multimodal and Multilingual Tolerance Classification** — a prototype-based classifier grounded in Tolerance Near Set theory for multimodal sentiment analysis and harmful meme classification in multilingual settings.
 
 > **Paper**: *MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings*  
 > Jaher Hassan Chowdhury & Sheela Ramanna — University of Winnipeg, Canada
@@ -9,11 +9,14 @@
 
 ## Overview
 
-MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — that ensures each cluster contains only intra-class samples and reduces each class to a single representative prototype for inference.
+MMLTC integrates an unsupervised tolerance-based clustering stage with a supervised prototype-driven classification approach. Unlike global partitioning methods, MMLTC constructs **label-exclusive tolerance classes** — ensuring that each cluster contains only intra-class samples — and reduces each class to a single representative prototype for inference.
+
+![MMLTC Framework Overview](images/framework_overview.png)
 
 Key highlights:
 - Outperforms state-of-the-art deep neural classifiers on **5 out of 7** benchmark datasets (weighted F1)
 - Consistently matches or surpasses Random Forest, SVM, Logistic Regression, KNN, and XGBoost
+- Works as a **standalone classifier on any modality** — text, image, audio, tabular, or concatenated multimodal embeddings
 - Operates effectively on **low-resource Bengali** datasets without data augmentation or language-specific engineering
 - Statistically significant improvements over KNN and Random Forest (Wilcoxon signed-rank, p = 0.0156)
 
@@ -232,6 +235,8 @@ Standard L2 distance, computed efficiently via the squared-norm expansion.
 
 ## How It Works
 
+![MMLTC Detailed Workflow](images/workflow.png)
+
 ### Training Phase
 1. Accept any numeric feature array `X` and label array `y`
 2. For each class label, compute pairwise distances between all in-class samples
@@ -262,6 +267,8 @@ For a test vector **Z_test**, find the k nearest prototypes and predict via inve
 | MUTE | DORA (0.7620) | Euclidean + Mean | **0.7640** |
 
 ### Statistical Analysis vs. Baseline Classifiers
+
+![t-SNE Visualization](images/tsne.png)
 
 | Comparator | p-value | Significant? | Cohen's d | Effect Size |
 |---|---|---|---|---|
