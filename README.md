@@ -2,8 +2,7 @@
 
 **Multimodal and Multilingual Tolerance Classification** — a prototype-based classifier grounded in Tolerance Near Set theory for multimodal sentiment analysis and harmful meme classification in multilingual settings.
 
-> **Paper**: *MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings*  
-> Jaher Hassan Chowdhury & Sheela Ramanna — University of Winnipeg, Canada
+> **Paper**: *Chowdhury, Jaher Hassan, and Sheela Ramanna. "MMLTC: A Novel Tolerance‐Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings." Computational Intelligence 42.2 (2026): e70219.*  
 
 ---
 
@@ -339,16 +338,17 @@ MMLTC/
 
 ## Citation
 
-If you use this work, please cite both the paper:
+If you use this work, please cite the paper:
 ```bibtex
-@mastersthesis{chowdhury2025mmltc_thesis,
-  title  = {MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal
-            Sentiment and Harmful Meme Classification in Multilingual Settings},
-  author = {Jaher Hassan Chowdhury},
-  school = {University of Winnipeg},
-  year   = {2025},
-  month  = {December},
-  note   = {Supervisor: Sheela Ramanna}
+@article{chowdhury2026mmltc,
+  title={MMLTC: A Novel Tolerance-Based Clustering Framework for Multimodal Sentiment and Harmful Meme Classification in Multilingual Settings},
+  author={Chowdhury, Jaher Hassan and Ramanna, Sheela},
+  journal={Computational Intelligence},
+  volume={42},
+  number={2},
+  pages={e70219},
+  year={2026},
+  publisher={Wiley Online Library}
 }
 ```
 
